@@ -1,0 +1,12 @@
+# Installation
+
+Example with [stow](https://www.gnu.org/software/stow/):
+
+	PREFIX=$HOME/stow/tojson
+	git clone https://github.com/woky/tojson && cd tojson
+	pip3 install --user .
+	./setup.py install --root=$PREFIX --prefix=''
+
+# Usage
+
+	% tojson --help
