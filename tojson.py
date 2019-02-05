@@ -13,9 +13,9 @@ yaml_re = re.compile('\.ya?ml$', re.I)
 toml_re = re.compile('\.toml$', re.I)
 
 def detect_format(f):
-    if yaml_re.match(f.name):
+    if yaml_re.search(f.name):
         return 'yaml'
-    if toml_re.match(f.name):
+    if toml_re.search(f.name):
         return 'toml'
     raise click.UsageError('Cannot determine format of file ' + f.name)
 
@@ -40,9 +40,10 @@ def convert(format, files):
     Converts YAML and TOML documents to concatenated JSON stream.
 
     Each input document is converted into standalone JSON document.
-    Input YAML files can be composed of multiple documents. Converted
-    JSON documents are printed to standard output and separated by
-    newline character.
+    Input YAML files can be composed of multiple documents. Only
+    standard YAML tags are recognized (yaml.safe_load_all() function
+    is used). Converted JSON documents are printed to standard output
+    and separated by newline character.
 
     Input documents can be fed via standard input and/or positional
     arguments. Format of each input document is guessed from its
