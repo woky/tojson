@@ -7,6 +7,13 @@ Example with [stow](https://www.gnu.org/software/stow/):
 	pip3 install --user .
 	./setup.py install --root=$PREFIX --prefix=''
 
-# Usage
+# Other Formats
 
-	% tojson --help
+## HOCON
+
+- https://github.com/chimpler/pyhocon
+
+## HCL
+
+- https://github.com/virtuald/pyhcl
+- https://github.com/mattolenik/hclq

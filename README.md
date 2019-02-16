@@ -1,12 +1,3 @@
-# Installation
-
-Example with [stow](https://www.gnu.org/software/stow/):
-
-	PREFIX=$HOME/stow/tojson
-	git clone https://github.com/woky/tojson && cd tojson
-	pip3 install --user .
-	./setup.py install --root=$PREFIX --prefix=''
-
 # Usage
 
 	% tojson --help
@@ -52,3 +43,22 @@ Example with [stow](https://www.gnu.org/software/stow/):
 	  Turn foo.yaml file and bar.toml on standard input into JSON stream:
 	    tojson foo.yaml -t - <bar.toml
 	
+# Installation
+
+Example with [stow](https://www.gnu.org/software/stow/):
+
+	PREFIX=$HOME/stow/tojson
+	git clone https://github.com/woky/tojson && cd tojson
+	pip3 install --user .
+	./setup.py install --root=$PREFIX --prefix=''
+
+# Other Formats
+
+## HOCON
+
+- https://github.com/chimpler/pyhocon
+
+## HCL
+
+- https://github.com/virtuald/pyhcl
+- https://github.com/mattolenik/hclq
