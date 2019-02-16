@@ -9,7 +9,6 @@ setup(
     author='woky',
     url='https://github.com/woky/tojson',
     license='GPLv3',
-    py_modules=['tojson'],
-    install_requires=[ 'click', 'pyyaml', 'pytoml' ],
-    entry_points={ 'console_scripts': [ 'tojson=tojson:convert' ] },
+    install_requires=[ 'pyyaml', 'pytoml' ],
+    scripts = [ 'tojson' ]
 )

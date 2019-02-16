@@ -2,4 +2,4 @@
 README.md: %: %.in
 	exec >$@
 	cat $<
-	tojson --help | sed 's/^/\t/'
+	./tojson --help | sed 's/^/\t/'

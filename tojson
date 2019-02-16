@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+# Licensed under GPLv3
+
+import sys
+import re
+import json
+
+########################################
+
+filename_patterns = []
+converters = {}
+short_opts = {}
+
+def add_format(name, short_opt, filename_regex, converter_fun):
+    regex = re.compile(filename_regex, re.I)
+    filename_patterns.append((regex, name))
+    converters[name] = converter_fun
+    short_opts[short_opt] = name
+
+try:
+    import yaml
+    def convert_yaml(f):
+        for doc in yaml.safe_load_all(f):
+            print(json.dumps(doc))
+    add_format('yaml', 'y', '\.ya?ml$', convert_yaml)
+except ModuleNotFoundError:
+    pass
+
+try:
+    import pytoml
+    def convert_toml(f):
+        print(pytoml.load(f))
+    add_format('toml', 't', '\.toml$', convert_toml)
+except ModuleNotFoundError:
+    pass
+
+add_format('json', 'j', '\.json$', lambda f: print(f.read()))
+
+########################################
+
+def show_help():
+    print('''Usage: tojson [FILES]...
+
+  Converts YAML and TOML documents to concatenated JSON stream.
+
+  Each input document is converted into standalone JSON document.
+  Input YAML files can be composed of multiple documents. Only
+  standard YAML tags are recognized (yaml.safe_load_all() function is
+  used). Converted JSON documents are printed to standard output and
+  separated by newline character. JSON document on input is copied to
+  output verbatim.
+
+  Input documents can be fed via standard input and/or positional
+  arguments. Format of input documents specified before any format
+  option (see below) is guessed from their filename extension
+  (matching is case-insensitive, both `yaml` and `yml` imply YAML).
+  You need to specify format for filenames with non-standard extension
+  or for standard input specified either explicitly by "-" argument or
+  implicitly by supplying no positional arguments.
+
+  Hosted at https://github.com/woky/tojson. Licensed under GPLv3.
+
+  This tool was created mainly for further processing of JSON
+  documents by jq (https://stedolan.github.io/jq/).
+
+Options:
+    -h, --help              Show this message and exit.
+
+  Following options change format of all positional arguments that
+  follows until another format option, or of standard input if no
+  positional arguments are specified.
+
+    -y, --yaml              Force YAML format
+    -t, --toml              Force TOML format
+    -j, --json              Force JSON format (verbatim copy)
+
+Examples:
+  Turn YAML documents on standard input into JSON stream:
+    tojson -y
+
+  Turn foo.yaml file and bar.toml on standard input into JSON stream:
+    tojson foo.yaml -t - <bar.toml
+''')
+    sys.exit(0)
+
+def error(msg, arg_idx=None):
+    prefix = 'ERROR: '
+    if arg_idx != None:
+        prefix += f'Invalid argument on position {arg_idx+1}\n'
+    print(prefix + msg, file=sys.stderr)
+    sys.exit(1)
+
+########################################
+
+input_args = []
+
+current_format = None
+stdin_taken = False
+verbatim_args = False
+
+for idx, arg in enumerate(sys.argv[1:]):
+    if not verbatim_args and len(arg) >= 2 and arg[0] == '-':
+        if len(arg) == 2: # short option or --
+            if arg[1] == 'h':
+                show_help()
+            if arg[1] == '-':
+                verbatim_args = True
+                continue
+            if not arg[1] in short_opts:
+                error(f'Unknown option "{arg}"', arg_idx=idx)
+            current_format = short_opts[arg[1]]
+        else:
+            if arg[2:] == 'help':
+                show_help()
+            if arg[2:] not in converters:
+                error(f'Unknown option "{arg}"', arg_idx=idx)
+            current_format = arg[2:]
+        continue
+
+    if not verbatim_args and arg == '-':
+        if stdin_taken:
+            error('Standard input specified more than once',
+                    arg_idx=idx)
+        if not current_format:
+            error('Format of standard input must be specified',
+                    arg_idx=idx)
+        stdin_taken = True
+        input_args.append((current_format, sys.stdin))
+    else:
+        arg_format = current_format
+        if not arg_format:
+            arg_format = None
+            for patt, patt_format in filename_patterns:
+                if patt.search(arg):
+                    arg_format = patt_format
+            if not arg_format:
+                error(f'Cannot determine format of input file "{arg}"',
+                        arg_idx=idx)
+        input_args.append((arg_format, arg))
+
+if not input_args:
+    if not current_format:
+        error('Format of standard input must be specified')
+    input_args.append((current_format, sys.stdin))
+
+########################################
+
+for in_format, in_file in input_args:
+    if isinstance(in_file, str):
+        try:
+            in_file = open(in_file, 'r')
+        except OSError as err:
+            error(f'Cannot open file "{in_file}" for reading:\n{err}')
+            sys.exit(1)
+    converters[in_format](in_file)
+    in_file.close()
